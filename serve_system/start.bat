@@ -16,6 +16,11 @@ set "PYTHON=%WINPYDIR%\python.exe "
 set "PIPPATH=%~dp0\python\python-3.9.13-win\Scripts\pip.exe "
 set "USER_SITE=%~dp0\python\python-3.9.13-win\site-packages "
 )
+IF EXIST python (
+echo 未检测到集成环境，使用系统Python解释器
+set "PYTHON=python.exe "
+)ELSE (
+)
 
 rem echo %USER_SITE%
 %PIPPATH% install --no-index --find-links=./pip_packages -r ../requirements.txt

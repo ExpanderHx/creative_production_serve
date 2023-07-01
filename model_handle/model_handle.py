@@ -38,7 +38,7 @@ class ModelHandle(object):
             for inum, (stream_resp, _) in enumerate(self.load_model_handle.model.stream_chat(
                     self.load_model_handle.tokenizer,
                     prompt,
-                    history=history[-self.model_config.history_len:-1] if ( self.model_config.history_len > 0 and len(history) >0 ) else [],
+                    history=history[(-(len(history)) if self.model_config.history_len > len(history)else (-self.model_config.history_len)):-1] if ( self.model_config.history_len > 0 and len(history) >0 ) else [],
                     max_length=self.model_config.max_token,
                     temperature=self.model_config.temperature
             )):
@@ -51,7 +51,7 @@ class ModelHandle(object):
             response, _ = self.model.chat(
                 self.load_model_handle.tokenizer,
                 prompt,
-                history=history[-self.model_config.history_len:] if ( self.model_config.history_len > 0 and len(history) >0 ) else [],
+                history=history[(-(len(history)) if self.model_config.history_len > len(history)else (-self.model_config.history_len)):-1] if ( self.model_config.history_len > 0 and len(history) >0 ) else [],
                 max_length=self.model_config.max_token,
                 temperature=self.model_config.temperature
             )

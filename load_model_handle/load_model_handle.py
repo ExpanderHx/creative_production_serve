@@ -10,10 +10,20 @@ class LoadModelHandle(object):
         self.model_config = model_config;
 
     def load_model(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True)
-        model = AutoModel.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True).half().cuda()
-        # self.tokenizer = AutoTokenizer.from_pretrained(self.model_config.tokenizer_name, trust_remote_code=True)
-        # model = AutoModel.from_pretrained(self.model_config.model_name, trust_remote_code=True).half().cuda()
+        # self.tokenizer = AutoTokenizer.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True)
+        # model = AutoModel.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True).half().cuda()
+        tokenizer_name = self.model_config.tokenizer_name
+        model_name = self.model_config.model_name
+        model_path = self.model_config.model_path
+        if model_path is not None and len(model_path.strip()) > 0:
+            tokenizer_name = model_path;
+            model_name = model_path;
+
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)
+        if torch.cuda.is_available() and (self.model_config.load_device is None or self.model_config.load_device != "cpu"):
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True).half().cuda()
+        else:
+            model = AutoModel.from_pretrained(model_name, trust_remote_code=True).float()
         self.model = model.eval()
         return self.model
 

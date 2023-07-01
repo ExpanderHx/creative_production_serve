@@ -37,18 +37,15 @@ class BaseResponse(BaseModel):
 async def document():
     return RedirectResponse(url="/docs")
 
-async def service_state(chatModelConfig: ChatModelConfig):
-    modelConfig = ModelConfig.handle_dict(chatModelConfig.dict())
-    modelHandle.reload_model(modelConfig)
-
-    message= f'{"system_version":{system_version},"message":"服务端状态正常","state":200}'
+async def service_state():
+    message= f'{{"system_version":{system_version},"message":"服务端状态正常","state":200}}'
     return responseModal(
         message = message
     )
 
 
 async def chat(
-        question: str = Body(..., description="Question", example="工伤保险是什么？"),
+        question: str = Body(..., description="Question", example="填入问题"),
         history: List[List[str]] = Body(
             [],
         ),
@@ -90,6 +87,7 @@ def start_serve(host,port):
         )
 
     app.get("/", response_model=BaseResponse)(document)
+    app.post("/service_state", response_model=responseModal)(service_state)
     app.post("/chat", response_model=ChatMessage)(chat)
     app.post("/reload_model", response_model=responseModal)(reload_model)
 
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     model_config = ModelConfig.handle_dict(args)
     print('*----------------模型加载完成------------------*')
     modelHandle = ModelHandle(model_config);
-    print(model_config.model_name)
-    print(model_config.tokenizer_name)
+    # print(model_config.model_name)
+    # print(model_config.tokenizer_name)
     modelHandle.load_model();
     start_serve(host, port);
