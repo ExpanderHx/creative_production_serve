@@ -65,6 +65,9 @@ async def chat(
 
 async def reload_model(chatModelConfig: ChatModelConfig):
     modelConfig = ModelConfig.handle_dict(chatModelConfig.dict())
+    global modelHandle;
+    if modelHandle is None:
+        modelHandle = ModelHandle(model_config);
     modelHandle.reload_model(modelConfig)
 
     return responseModal(
@@ -98,7 +101,8 @@ def getEnviron():
 
     # Access all environment variables
     print('*---------------ENVIRON-------------------*')
-    print(os.environ["HF_HOME"])
+    if "HF_HOME" in os.environ:
+        print(os.environ["HF_HOME"])
     # print(os.environ)
     print('*----------------HOME------------------*')
 
@@ -119,5 +123,5 @@ if __name__ == "__main__":
     modelHandle = ModelHandle(model_config);
     # print(model_config.model_name)
     # print(model_config.tokenizer_name)
-    modelHandle.load_model();
+    # modelHandle.load_model();
     start_serve(host, port);

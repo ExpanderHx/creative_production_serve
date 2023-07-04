@@ -24,8 +24,8 @@ class ModelHandle(object):
         self.model = self.load_model_handle.load_model()
 
     def unload_model(self):
-        if self.load_model_handle is not None:
-            self.model = None
+        self.model = None
+        if 'load_model_handle' in dir(self):
             self.load_model_handle.unload_model();
 
 

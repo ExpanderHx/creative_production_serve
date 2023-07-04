@@ -31,8 +31,10 @@ class LoadModelHandle(object):
         if self.model is not None:
             self.model.close()
     def unload_model(self):
-        del self.model
-        del self.tokenizer
+        if 'model' in dir(self):
+            del self.model
+        if 'tokenizer' in dir(self):
+            del self.tokenizer
         self.model = self.tokenizer = None
         self.clear_torch_cache()
 
