@@ -160,7 +160,8 @@ if '%1'=='ELEV' (del "%vbsGetPrivileges%" 1>nul 2>nul & shift /1)
 """
 
 
-def set_env(target_dir_path):
+
+def set_env_dir(file_name,target_dir_path):
     """
     功能: 给Windows系统添加环境变量, Windows系统版本不能太低, 要支持软链接
     :param target_dir_path: 目标文件夹路径, 就是要添加到环境变量的文件夹路径
@@ -169,23 +170,11 @@ def set_env(target_dir_path):
 
     # 创建一个bat文件, 来跑命令
     bat_file_path = os.path.join(os.getcwd(), "set_windows_env.bat")
-
+    cmd_str = "mklink /d  C:\windows\{}  {}\n".format(file_name, target_dir_path)
     with open(bat_file_path, "w") as f:
         # 首先要获取管理员权限
         f.write(get_administrator_rights_cmd_str)
-
-        for file_name in os.listdir(target_dir_path):
-            file_path = os.path.join(target_dir_path, file_name)
-
-            if os.path.isdir(file_path):
-                # 是文件夹, 那么就创建文件夹的软链接
-                cmd_str = "mklink /d  C:\windows\{}  {}\n".format(file_name, file_path)
-
-            elif os.path.isfile(file_path):
-                # 是文件, 那么就创建文件的软链接
-                cmd_str = "mklink  C:\windows\{}  {}\n".format(file_name, file_path)
-
-            f.write(cmd_str)
+        f.write(cmd_str)
 
     subprocess.run(bat_file_path, shell=True)
 
@@ -199,8 +188,8 @@ def addGccPath():
         if "PATH" in os.environ:
             os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit')
             os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit', 'bin')
-            set_env(os.path.join(dir_path,'reliance','w64devkit'))
-            set_env(os.path.join(dir_path,'reliance','w64devkit', 'bin'))
+            set_env_dir('w64devkit',os.path.join(dir_path,'reliance','w64devkit'))
+            # set_env(os.path.join(dir_path,'reliance','w64devkit', 'bin'))
 
 
 
