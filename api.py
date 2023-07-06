@@ -1,3 +1,4 @@
+import platform
 import subprocess
 import sys
 import zipfile
@@ -22,9 +23,13 @@ from typing import List, Optional
 from model_handle.model_handle import ModelHandle
 import os
 
+
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
 # 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
+
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="HTTP status code")
@@ -180,16 +185,19 @@ def set_env_dir(file_name,target_dir_path):
 
 
 def addGccPath():
-    # win cpu环境需要gcc编译
-    if not torch.cuda.is_available():
-        extractallW64devkit()
+    sys = platform.system()
+    if sys == "Windows":
+        print("OS is Windows!!!")
+        # win cpu环境需要gcc编译
+        if not torch.cuda.is_available():
+            extractallW64devkit()
 
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        if "PATH" in os.environ:
-            os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit')
-            os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit', 'bin')
-            set_env_dir('w64devkit',os.path.join(dir_path,'reliance','w64devkit'))
-            # set_env(os.path.join(dir_path,'reliance','w64devkit', 'bin'))
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+            if "PATH" in os.environ:
+                os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit')
+                os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit', 'bin')
+                set_env_dir('w64devkit',os.path.join(dir_path,'reliance','w64devkit'))
+                # set_env(os.path.join(dir_path,'reliance','w64devkit', 'bin'))
 
 
 
