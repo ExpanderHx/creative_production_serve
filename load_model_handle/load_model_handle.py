@@ -40,7 +40,7 @@ class LoadModelHandle(object):
 
     def clear_torch_cache(self):
         gc.collect()
-        if self.model_config is not None and self.model_config.load_device is not None and self.model_config.load_device.lower() != "cpu":
+        if self.model_config is not None and self.model_config.load_device is not None and self.model_config.load_device.lower() != "cpu" and torch.cuda.is_available() :
             if torch.has_mps:
                 try:
                     from torch.mps import empty_cache

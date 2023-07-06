@@ -10,8 +10,9 @@ from huggingface_hub import snapshot_download
 # a = snapshot_download(repo_id="THUDM/chatglm-6b-int8")
 while True:
     try:
-        a = snapshot_download(repo_id="THUDM/chatglm-6b")
-        a = snapshot_download(repo_id="THUDM/chatglm2-6b")
+        # a = snapshot_download(repo_id="THUDM/chatglm-6b")
+        # a = snapshot_download(repo_id="THUDM/chatglm2-6b")
+        a = snapshot_download(repo_id="THUDM/chatglm-6b-int4")
         break
     except Exception:
         print("网络异常,准备重试")

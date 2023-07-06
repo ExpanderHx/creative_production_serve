@@ -9,3 +9,5 @@
 /serve_system/python/python-3.9.13-win-1/
 /serve_system/python/python-3.9.13-win/Lib/site-packages/
 python
+**/__pycache__
+/reliance/w64devkit
