@@ -6,7 +6,7 @@ import zipfile
 import pydantic
 import torch
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Request
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
@@ -19,10 +19,14 @@ from http_config.chat_model_config import ChatModelConfig
 from http_config.response_modal import responseModal
 from load_model_handle.load_model_handle import LoadModelHandle
 from typing import List, Optional
+import logging
+from fastapi.responses import JSONResponse
 
 from model_handle.model_handle import ModelHandle
 import os
+import logging
 
+from util.start_util import addGccPath, getEnviron
 
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
@@ -30,6 +34,31 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
 
+
+app = FastAPI()
+
+# 创建一个日志记录器
+logger = logging.getLogger("uvicorn")
+
+# 创建一个请求钩子来取消特定路径的日志记录
+# @app.middleware("http")
+# async def exclude_path_middleware(request: Request, call_next):
+#     if request.url.path == "/service_state":
+#         # 临时禁用日志记录器
+#         logger.disabled = True
+#         try:
+#             # 直接返回响应结果给客户端，不触发日志记录
+#             message = f'{{"system_version":{system_version},"message":"服务端状态正常","state":200}}'
+#             return  JSONResponse(message)
+#         finally:
+#             pass
+#             # 恢复日志记录器
+#             logger.disabled = False
+#
+#     else:
+#         # 执行下一个中间件和路由处理程序
+#         response = await call_next(request)
+#         return response
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="HTTP status code")
@@ -87,8 +116,6 @@ async def reload_model(chatModelConfig: ChatModelConfig):
 
 def start_serve(host,port):
     global app
-
-    app = FastAPI()
     if OPEN_CROSS_DOMAIN:
         app.add_middleware(
             CORSMiddleware,
@@ -104,102 +131,6 @@ def start_serve(host,port):
     app.post("/reload_model", response_model=responseModal)(reload_model)
 
     uvicorn.run(app, host=host, port=port)
-
-def getEnviron():
-    # 使用os.environ获取环境变量字典，environ是在os.py中定义的一个dict environ = {}
-
-    # Access all environment variables
-    print('*---------------ENVIRON-------------------*')
-    if "HF_HOME" in os.environ:
-        print(os.environ["HF_HOME"])
-    # print(os.environ)
-    print('*----------------HOME------------------*')
-
-
-def extractallW64devkit():
-    try:
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        # 压缩文件路径
-        zip_path = os.path.join(dir_path,'reliance','w64devkit.zip')
-        # 文件存储路径
-        save_path = os.path.join(dir_path,'reliance')
-
-        # 读取压缩文件
-        file = zipfile.ZipFile(zip_path)
-        # 解压文件
-        print('开始解压...')
-        file.extractall(save_path)
-        print('解压结束。')
-        # 关闭文件流
-        file.close()
-    except Exception as r:
-        print(print('异常 %s' %(r)))
-
-
-get_administrator_rights_cmd_str = """
-@echo off
-CLS
-:init
-setlocal DisableDelayedExpansion
-set "batchPath=%~0"
-for %%k in (%0) do set batchName=%%~nk
-set "vbsGetPrivileges=%temp%\OEgetPriv_%batchName%.vbs"
-setlocal EnableDelayedExpansion
-:checkPrivileges
-NET FILE 1>NUL 2>NUL
-if '%errorlevel%' == '0' ( goto gotPrivileges ) else ( goto getPrivileges )
-:getPrivileges
-if '%1'=='ELEV' (echo ELEV & shift /1 & goto gotPrivileges)
-ECHO Set UAC = CreateObject^("Shell.Application"^) > "%vbsGetPrivileges%"
-ECHO args = "ELEV " >> "%vbsGetPrivileges%"
-ECHO For Each strArg in WScript.Arguments >> "%vbsGetPrivileges%"
-ECHO args = args ^& strArg ^& " " >> "%vbsGetPrivileges%"
-ECHO Next >> "%vbsGetPrivileges%"
-ECHO UAC.ShellExecute "!batchPath!", args, "", "runas", 1 >> "%vbsGetPrivileges%"
-"%SystemRoot%\System32\WScript.exe" "%vbsGetPrivileges%" %*
-exit /B
-:gotPrivileges
-setlocal & pushd .
-cd /d %~dp0
-if '%1'=='ELEV' (del "%vbsGetPrivileges%" 1>nul 2>nul & shift /1)
-"""
-
-
-
-def set_env_dir(file_name,target_dir_path):
-    """
-    功能: 给Windows系统添加环境变量, Windows系统版本不能太低, 要支持软链接
-    :param target_dir_path: 目标文件夹路径, 就是要添加到环境变量的文件夹路径
-    :return:
-    """
-
-    # 创建一个bat文件, 来跑命令
-    bat_file_path = os.path.join(os.getcwd(), "set_windows_env.bat")
-    cmd_str = "mklink /d  C:\windows\{}  {}\n".format(file_name, target_dir_path)
-    with open(bat_file_path, "w") as f:
-        # 首先要获取管理员权限
-        f.write(get_administrator_rights_cmd_str)
-        f.write(cmd_str)
-
-    subprocess.run(bat_file_path, shell=True)
-
-
-def addGccPath():
-    sys = platform.system()
-    if sys == "Windows":
-        print("OS is Windows!!!")
-        # win cpu环境需要gcc编译
-        if not torch.cuda.is_available():
-            extractallW64devkit()
-
-            dir_path = os.path.dirname(os.path.abspath(__file__))
-            if "PATH" in os.environ:
-                os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit')
-                os.environ["PATH"] = os.environ["PATH"] + "; " + os.path.join(dir_path,'reliance','w64devkit', 'bin')
-                set_env_dir('w64devkit',os.path.join(dir_path,'reliance','w64devkit'))
-                # set_env(os.path.join(dir_path,'reliance','w64devkit', 'bin'))
-
-
 
 
 
