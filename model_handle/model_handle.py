@@ -28,8 +28,56 @@ class ModelHandle(object):
         if 'load_model_handle' in dir(self):
             self.load_model_handle.unload_model();
 
-
     def generatorAnswer(self, prompt: str,
+                        history: List[List[str]] = [],
+                        streaming: bool = False):
+
+        if self.model_config is not None:
+            if "chatglm" in self.model_config.model_name :
+                return self.generatorChatGlmAnswer(prompt,history,streaming);
+            elif "lama" in self.model_config.model_name:
+                return self.generatorLLamaAnswer(prompt,history,streaming);
+
+
+
+
+    def generatorLLamaAnswer(self, prompt: str,
+                        history: List[List[str]] = [],
+                        streaming: bool = False):
+        promptIntegration = f'<s>Human: {prompt}\n</s><s>Assistant: '
+        input_ids = self.load_model_handle.tokenizer([promptIntegration], return_tensors="pt",
+                              add_special_tokens=False).input_ids.to('cuda')
+        generate_input = {
+            "input_ids": input_ids,
+            "max_new_tokens": self.load_model_handle.model_config.max_token,
+            "do_sample": True,
+            "top_k": 50,
+            "top_p": self.load_model_handle.model_config.top_p,
+            "temperature": self.load_model_handle.model_config.temperature,
+            "repetition_penalty": 1.3,
+            "eos_token_id": self.load_model_handle.tokenizer.eos_token_id,
+            "bos_token_id": self.load_model_handle.tokenizer.bos_token_id,
+            "pad_token_id": self.load_model_handle.tokenizer.pad_token_id
+        }
+        generate_ids = self.load_model_handle.model.generate(**generate_input)
+        text = self.load_model_handle.tokenizer.decode(generate_ids[0])
+
+        try:
+            text = text.replace(promptIntegration, '')
+            text = text.split("</s>")[1].split("<s>")[1].replace('Assistant:','')
+        except:
+            print("LLama text 处理异常")
+
+
+
+        # self.clear_torch_cache()
+        history += [[prompt, text]]
+        answer_result = AnswerResult()
+        answer_result.history = history
+        answer_result.llm_output = {"answer": text}
+        yield answer_result
+
+    def generatorChatGlmAnswer(self, prompt: str,
                          history: List[List[str]] = [],
                          streaming: bool = False):
 

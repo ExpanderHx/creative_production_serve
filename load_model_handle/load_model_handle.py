@@ -1,7 +1,7 @@
 import gc
 
 import torch
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForCausalLM, AutoConfig
 
 
 class LoadModelHandle(object):
@@ -12,6 +12,31 @@ class LoadModelHandle(object):
     def load_model(self):
         # self.tokenizer = AutoTokenizer.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True)
         # model = AutoModel.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True).half().cuda()
+
+
+        model_name = self.model_config.model_name
+        if model_name is not None:
+            if "chatglm" in model_name :
+                return self.load_model_glm();
+            elif "lama" in model_name:
+                return self.load_model_llama();
+
+        # tokenizer_name = self.model_config.tokenizer_name
+        #
+        # model_path = self.model_config.model_path
+        # if model_path is not None and len(model_path.strip()) > 0:
+        #     tokenizer_name = model_path;
+        #     model_name = model_path;
+        #
+        # self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)
+        # if torch.cuda.is_available() and (self.model_config.load_device is None or self.model_config.load_device != "cpu"):
+        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True).half().cuda()
+        # else:
+        #     model = AutoModel.from_pretrained(model_name, trust_remote_code=True).float()
+        # self.model = model.eval()
+        # return self.model
+
+    def load_model_glm(self):
         tokenizer_name = self.model_config.tokenizer_name
         model_name = self.model_config.model_name
         model_path = self.model_config.model_path
@@ -20,12 +45,35 @@ class LoadModelHandle(object):
             model_name = model_path;
 
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)
-        if torch.cuda.is_available() and (self.model_config.load_device is None or self.model_config.load_device != "cpu"):
+        if torch.cuda.is_available() and (
+                self.model_config.load_device is None or self.model_config.load_device != "cpu"):
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True).half().cuda()
         else:
             model = AutoModel.from_pretrained(model_name, trust_remote_code=True).float()
         self.model = model.eval()
         return self.model
+
+    def load_model_llama(self):
+        tokenizer_name = self.model_config.tokenizer_name
+        model_name = self.model_config.model_name
+        model_path = self.model_config.model_path
+        if model_path is not None and len(model_path.strip()) > 0:
+            tokenizer_name = model_path;
+            model_name = model_path;
+
+        config =  AutoConfig.from_pretrained(tokenizer_name);
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        if config is not None:
+            self.tokenizer.pad_token_id = config.pad_token_id
+        if torch.cuda.is_available() and (
+                self.model_config.load_device is None or self.model_config.load_device != "cpu"):
+            #  device_map='auto',torch_dtype=torch.float16,load_in_8bit=True
+            model = AutoModelForCausalLM.from_pretrained(model_name,).half().cuda()
+        else:
+            model = AutoModelForCausalLM.from_pretrained(model_name, device_map='auto',torch_dtype=torch.float16,load_in_8bit=True).float()
+        self.model = model.eval()
+        return self.model
+
 
     def close_model(self):
         if self.model is not None:
