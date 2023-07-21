@@ -44,7 +44,15 @@ class ModelHandle(object):
     def generatorLLamaAnswer(self, prompt: str,
                         history: List[List[str]] = [],
                         streaming: bool = False):
+        inputList = [];
         promptIntegration = f'<s>Human: {prompt}\n</s><s>Assistant: '
+        if history is not None:
+            history = history[(-(len(history)+1) if self.model_config.history_len > len(history) else (
+                -self.model_config.history_len)):-1] if (self.model_config.history_len > 0 and len(history) > 0) else []
+            for historyItem in history:
+                if historyItem is not None and len(historyItem)>1:
+                    inputList.append(f'<s>Human: {historyItem[0]}\n</s><s>Assistant: {historyItem[1]}</s>');
+        inputList.append(promptIntegration);
         input_ids = self.load_model_handle.tokenizer([promptIntegration], return_tensors="pt",
                               add_special_tokens=False).input_ids.to('cuda')
         generate_input = {
