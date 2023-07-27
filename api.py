@@ -40,25 +40,6 @@ app = FastAPI()
 # 创建一个日志记录器
 logger = logging.getLogger("uvicorn")
 
-# 创建一个请求钩子来取消特定路径的日志记录
-# @app.middleware("http")
-# async def exclude_path_middleware(request: Request, call_next):
-#     if request.url.path == "/service_state":
-#         # 临时禁用日志记录器
-#         logger.disabled = True
-#         try:
-#             # 直接返回响应结果给客户端，不触发日志记录
-#             message = f'{{"system_version":{system_version},"message":"服务端状态正常","state":200}}'
-#             return  JSONResponse(message)
-#         finally:
-#             pass
-#             # 恢复日志记录器
-#             logger.disabled = False
-#
-#     else:
-#         # 执行下一个中间件和路由处理程序
-#         response = await call_next(request)
-#         return response
 
 class BaseResponse(BaseModel):
     code: int = pydantic.Field(200, description="HTTP status code")

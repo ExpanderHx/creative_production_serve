@@ -121,23 +121,24 @@ class ModelHandle(object):
 
     def clear_torch_cache(self):
         gc.collect()
-        if self.llm_device.lower() != "cpu":
-            if torch.has_mps:
-                try:
-                    from torch.mps import empty_cache
-                    empty_cache()
-                except Exception as e:
-                    print(e)
-                    print(
-                        "如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
-            elif torch.has_cuda:
-                device_id = "0" if torch.cuda.is_available() else None
-                CUDA_DEVICE = f"{self.llm_device}:{device_id}" if device_id else self.llm_device
-                with torch.cuda.device(CUDA_DEVICE):
-                    torch.cuda.empty_cache()
-                    torch.cuda.ipc_collect()
-            else:
-                print("未检测到 cuda 或 mps，暂不支持清理显存")
+        if hasattr(self, 'llm_device'):
+            if self.llm_device.lower() != "cpu":
+                if torch.has_mps:
+                    try:
+                        from torch.mps import empty_cache
+                        empty_cache()
+                    except Exception as e:
+                        print(e)
+                        print(
+                            "如果您使用的是 macOS 建议将 pytorch 版本升级至 2.0.0 或更高版本，以支持及时清理 torch 产生的内存占用。")
+                elif torch.has_cuda:
+                    device_id = "0" if torch.cuda.is_available() else None
+                    CUDA_DEVICE = f"{self.llm_device}:{device_id}" if device_id else self.llm_device
+                    with torch.cuda.device(CUDA_DEVICE):
+                        torch.cuda.empty_cache()
+                        torch.cuda.ipc_collect()
+                else:
+                    print("未检测到 cuda 或 mps，暂不支持清理显存")
 
 
 

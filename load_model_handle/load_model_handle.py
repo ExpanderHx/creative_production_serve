@@ -1,7 +1,10 @@
 import gc
+import os
 
 import torch
 from transformers import AutoTokenizer, AutoModel, AutoModelForCausalLM, AutoConfig
+
+from config.model_type_config import model_type_chatglm, model_type_llama
 
 
 class LoadModelHandle(object):
@@ -13,6 +16,27 @@ class LoadModelHandle(object):
         # self.tokenizer = AutoTokenizer.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True)
         # model = AutoModel.from_pretrained("D:\huggingface\THUDM--chatglm2-6b", trust_remote_code=True).half().cuda()
 
+        tokenizer_name = self.model_config.tokenizer_name
+        model_name = self.model_config.model_name
+        model_path = self.model_config.model_path
+        if model_path is not None and len(model_path.strip()) > 0:
+            tokenizer_name = model_path;
+            model_name = model_path;
+
+        if model_name is not None:
+            model_name = model_name.replace('\\\\', '/')
+            model_name = model_name.replace('\\', '/')
+            path = os.path.join(os.path.realpath(model_name));
+            autoConfig = AutoConfig.from_pretrained(path, trust_remote_code=True)
+            print(autoConfig)
+            if autoConfig is not None:
+                print(autoConfig.model_type);
+                if autoConfig.model_type == model_type_chatglm:
+                    return self.load_model_glm();
+                elif autoConfig.model_type == model_type_llama:
+                    return self.load_model_llama();
+                else:
+                    pass
 
         model_name = self.model_config.model_name
         if model_name is not None:
