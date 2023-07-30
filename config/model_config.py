@@ -9,8 +9,12 @@ class ModelConfig(object):
         self.load_device = None;
         self.history_len = 10;
         self.max_token = 1000;
-        self.temperature = 0.01;
-        self.top_p = 0.9;
+        self.temperature = 0.7;
+        self.top_p = 0.3;
+        self.is_half = True;
+
+        self.model_type = None;
+        self.autoConfig = None;
 
 
     @classmethod

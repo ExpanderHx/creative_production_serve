@@ -126,7 +126,7 @@ if __name__ == "__main__":
     global modelHandle;
     getEnviron();
     model_config = ModelConfig.handle_dict(args)
-    print('*----------------模型加载完成------------------*')
+    print('*----------------服务端启动完成------------------*')
     modelHandle = ModelHandle(model_config);
     # print(model_config.model_name)
     # print(model_config.tokenizer_name)

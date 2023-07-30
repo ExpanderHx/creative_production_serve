@@ -13,3 +13,4 @@ class ChatModelConfig(BaseModel):
     max_token: Optional[int] = pydantic.Field(..., description="最大token数量")
     temperature: Optional[float] = pydantic.Field(..., description="温度")
     top_p: Optional[float] = pydantic.Field(..., description="返回查询的数量 知识问答时使用")
+    is_half: Optional[bool] = pydantic.Field(..., description="是否使用半精度")
