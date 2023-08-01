@@ -11,13 +11,13 @@
 #
 # import xml.etree.ElementTree as ET
 
-
-from modelscope.pipelines import pipeline
-from modelscope.utils.constant import Tasks
-
-p = pipeline('portrait-matting', 'damo/cv_unet_image-matting')
-a= p('D:\\downloads\\微信图片_20230725044952_1.jpg',)
-print(a)
+#
+# from modelscope.pipelines import pipeline
+# from modelscope.utils.constant import Tasks
+#
+# p = pipeline('portrait-matting', 'damo/cv_unet_image-matting')
+# a= p('D:\\downloads\\微信图片_20230725044952_1.jpg',)
+# print(a)
 
 
 # text = """
