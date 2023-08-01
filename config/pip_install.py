@@ -3,3 +3,5 @@
 
 # lmsys/vicuna-7b-v1.3      pip install protobuf==3.19.0
 # pip install xformers
+# pip install modelscope
+# pip install opencv-python

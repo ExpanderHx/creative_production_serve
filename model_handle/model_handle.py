@@ -67,7 +67,7 @@ class ModelHandle(object):
                     pass
                     # inputList.append(f'<s>Human: {historyItem[0]}\n</s><s>Assistant: {historyItem[1]}</s>');
         inputList.append(promptIntegration);
-        model_inputs = self.load_model_handle.tokenizer([promptIntegration], return_tensors="pt",add_special_tokens=False);
+        model_inputs = self.load_model_handle.tokenizer([promptIntegration], return_tensors="pt",add_special_tokens=False,padding=False);
         input_ids = model_inputs.input_ids
         if torch.cuda.is_available() and (
                 self.load_model_handle.model_config.load_device is None or self.load_model_handle.model_config.load_device != "cpu"):
@@ -81,30 +81,14 @@ class ModelHandle(object):
         generate_input = {
             "input_ids": input_ids,
             "attention_mask":model_inputs.attention_mask,
-            # "max_new_tokens": self.load_model_handle.model_config.max_token,
-            # "do_sample": True,
-            # "top_k": 50,
-            # "top_p": self.load_model_handle.model_config.top_p,
-            # "temperature": self.load_model_handle.model_config.temperature,
-            # "repetition_penalty": 1.3,
-            # "eos_token_id": self.load_model_handle.tokenizer.eos_token_id,
-            # "bos_token_id": self.load_model_handle.tokenizer.bos_token_id,
-            # "pad_token_id": self.load_model_handle.tokenizer.pad_token_id,
         }
-        self.load_model_handle.model.generation_config = {
-            **self.load_model_handle.model.generation_config,
-            "max_new_tokens": self.load_model_handle.model_config.max_token,
-            "do_sample": True,
-            "top_k": 50,
-            "top_p": self.load_model_handle.model_config.top_p,
-            "temperature": self.load_model_handle.model_config.temperature,
-            "repetition_penalty": 1.3,
-            "eos_token_id": self.load_model_handle.tokenizer.eos_token_id,
-            "bos_token_id": self.load_model_handle.tokenizer.bos_token_id,
-            "pad_token_id": self.load_model_handle.tokenizer.pad_token_id,
-        }
+        self.set_generation_config();
         generate_ids = self.load_model_handle.model.generate(**generate_input)
-        text = self.load_model_handle.tokenizer.decode(generate_ids[0])
+        text = self.load_model_handle.tokenizer.decode(
+            generate_ids[0],
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=True,
+        )
 
         try:
 
@@ -175,6 +159,22 @@ class ModelHandle(object):
             answer_result.history = history
             answer_result.llm_output = {"answer": response}
             yield answer_result
+
+
+    def set_generation_config(self):
+        try:
+            if self.load_model_handle.model.generation_config is not None:
+                self.load_model_handle.model.generation_config.max_new_tokens = self.load_model_handle.model_config.max_token;
+                self.load_model_handle.model.generation_config.do_sample = True;
+                self.load_model_handle.model.generation_config.top_k = 50;
+                self.load_model_handle.model.generation_config.top_p = self.load_model_handle.model_config.top_p;
+                self.load_model_handle.model.generation_config.temperature = self.load_model_handle.model_config.temperature;
+                self.load_model_handle.model.generation_config.repetition_penalty = 1.3;
+                self.load_model_handle.model.generation_config.eos_token_id = self.load_model_handle.model_config.eos_token_id;
+                self.load_model_handle.model.generation_config.bos_token_id = self.load_model_handle.model_config.bos_token_id;
+                self.load_model_handle.model.generation_config.pad_token_id = self.load_model_handle.model_config.pad_token_id;
+        except:
+            pass
 
 
     def clear_torch_cache(self):

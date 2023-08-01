@@ -59,7 +59,8 @@ async def document():
 async def service_state():
     message= f'{{"system_version":{system_version},"message":"服务端状态正常","state":200}}'
     return responseModal(
-        message = message
+        message = message,
+        code = 1
     )
 
 
@@ -69,28 +70,49 @@ async def chat(
             [],
         ),
 ):
-    for answer_result in modelHandle.generatorAnswer(prompt=question, history=history,
-                                                          streaming=True):
-        resp = answer_result.llm_output["answer"]
-        history = answer_result.history
+    code = 0;
+    resp = None;
+    errMsg= "";
+    try:
+        if modelHandle is not None and modelHandle.load_model_handle is not None and modelHandle.load_model_handle.model is not None:
+            for answer_result in modelHandle.generatorAnswer(prompt=question, history=history, streaming=True):
+                resp = answer_result.llm_output["answer"]
+                history = answer_result.history
+                code = 1;
+        else:
+            errMsg = "模型还未加载，请先加载模型"
+    except Exception as e:
+        print(e)
         pass
 
+
     return ChatMessage(
+        code=code,
         question=question,
         response=resp,
         history=history,
         source_documents=[],
+        errMsg=errMsg
     )
 
 async def reload_model(chatModelConfig: ChatModelConfig):
-    modelConfig = ModelConfig.handle_dict(chatModelConfig.dict())
-    global modelHandle;
-    if modelHandle is None:
-        modelHandle = ModelHandle(model_config);
-    modelHandle.reload_model(modelConfig)
+    code = 0;
+    errMsg = "";
+    try:
+        modelConfig = ModelConfig.handle_dict(chatModelConfig.dict())
+        global modelHandle;
+        if modelHandle is None:
+            modelHandle = ModelHandle(model_config);
+        modelHandle.reload_model(modelConfig)
+        code = 1;
+    except Exception as e:
+        errMsg = "模型加载失败，请重试"
+        print(e)
 
     return responseModal(
-        message = "模型已重新加载"
+        message = "模型已重新加载",
+        code=code,
+        errMsg=errMsg
     )
 
 
